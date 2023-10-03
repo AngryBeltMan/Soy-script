@@ -1,0 +1,27 @@
+TO IMPL:
+defelem a $h1 "wow soy cool";
+defelem b $button "wow soy cool";
+hide a;
+render a;
+const b = 9302;
+constant c = 390293;
+~ comment
+if () => {
+
+} else => {
+
+} => {
+
+}
+for 0 -> x {
+}
+repeat 10 {
+    helo(#)
+}
+while () => {}
+on $on_click (a) => {}
+IMPL:
+init a = 10
+call function_name()
+func hello(args) {
+}
