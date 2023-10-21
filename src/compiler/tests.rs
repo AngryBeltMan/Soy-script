@@ -222,3 +222,16 @@ fn inline_repeat() {
     // console.log(\"no args!\"); six times
     assert_eq!(output.js_output, "console.log(\"no args!\");console.log(\"no args!\");console.log(\"no args!\");console.log(\"no args!\");console.log(\"no args!\");console.log(\"no args!\");");
 }
+
+//
+#[test]
+fn inline_and_non_inline() {
+    let input = r#"@inline jsfunc inlined() `console.log("inlined");` jsfunc not_inlined() `console.log("not inlined")` call inlined() call not_inlined() "#;
+    let lexer = Lexer::parse_str(input);
+    eprintln!("{:#?}", lexer.tokens);
+    let mut output = Output::init();
+    let mut inline_funcs = InlinedFuncs::new();
+    parse_lexer(&mut output, lexer,  &mut inline_funcs);
+    // console.log(\"no args!\"); six times
+    assert_eq!(output.js_output, "function not_inlined () {\nconsole.log(\"not inlined\")\n}\nconsole.log(\"inlined\");not_inlined()\n");
+}

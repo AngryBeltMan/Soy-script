@@ -14,6 +14,7 @@ pub fn parse_keyword_call(
         CompilerError::ExpectedToken,
         "expected token after keyword call (call.rs).",
     );
+    eprintln!("calling {}", call_name.text);
     // if check inline is true the function being called is inlined and has already been so we can
     // just return right now
     if check_inline_call(
@@ -23,10 +24,10 @@ pub fn parse_keyword_call(
         &mut lexer_index,
         &call_name.text,
     ) {
-        eprintln!("inlined {}", call_name.text);
-        eprintln!("returned");
+        eprintln!("{:#?}", lexer_index);
         return lexer_index;
     }
+    eprintln!("call");
     assert!(
         call_name.token_type == TokenType::Ident,
         "ERROR: expected ident for function call. (call.rs)"
@@ -36,6 +37,7 @@ pub fn parse_keyword_call(
     output.js_output.push_str(&call_name.text);
     output.js_output.push('(');
     lexer_index += 1;
+    eprintln!("arg parsing");
     parse_args(lexer, &mut lexer_index, output, inline_funcs);
     output.js_output.push_str(")\n");
 
@@ -49,6 +51,7 @@ fn parse_args(
     output: &mut Output,
     inline_funcs: &mut InlinedFuncs,
 ) {
+    eprintln!("args parse {lexer_index}, {}", lexer.tokens.len());
     while *lexer_index < lexer.tokens.len() {
         match lexer.tokens[*lexer_index].symbol_id {
             // if it is a comma or left parenthesis we do nothing and continue parsing
@@ -82,6 +85,7 @@ fn check_inline_call(
     lexer_index: &mut usize,
     function_name: &str,
 ) -> bool {
+    eprintln!("contains {function_name} is {}", inline_funcs.inlined_js_funcs.contains_key(function_name));
     if !inline_funcs.inlined_js_funcs.contains_key(function_name) { return false; }
     // add one because it will begin the parse args after the parenthesis
     *lexer_index += 1;
@@ -112,9 +116,7 @@ fn parse_args_inlined(
     // holds what current argument indx this is important because we need to know the index of the
     // argument for inlined calls
     let mut arg_index = 0;
-    eprintln!("len {}, {lexer_index}", lexer.tokens.len());
     while *lexer_index < lexer.tokens.len() {
-        eprintln!("syyymbol {}", lexer.tokens[*lexer_index].symbol_id);
         match lexer.tokens[*lexer_index].symbol_id {
             TOKEN_COMMA | TOKEN_LPARENT => {},
             // we end if we encounter a right parenthesis
@@ -130,10 +132,8 @@ fn parse_args_inlined(
                 arg_index += 1;
             },
             // this means there is not args to the function and can end early
-            TOKEN_EMPTYPARENT => {
-                *lexer_index += 1;
-                return 0;
-            },
+            // returns zero because there are no args
+            TOKEN_EMPTYPARENT => { return 0; },
             0 => {
                 let inline_arg = format!("__inline_{fn_name}_arg{arg_index}");
                 output.js_output.push_str(&format!("let {inline_arg} = {};\n",&lexer.tokens[*lexer_index].text));

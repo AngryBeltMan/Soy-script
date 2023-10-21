@@ -28,7 +28,13 @@ pub fn parse_lexer(output: &mut Output, mut lexer: Lexer, inlined_funcs: &mut In
         let token =  lexer.tokens.get(index)
             .unwrap_or_error(CompilerError::ExpectedToken, ERRORINDEXINGLEXER );
         match token.token_type {
-            TokenType::Keyword => match_keyword(&lexer, output, inlined_funcs, &mut index, token.symbol_id),
+            TokenType::Keyword => {
+                match_keyword(&lexer, output, inlined_funcs, &mut index, token.symbol_id);
+                // clears all of the setting vars after it finishes parsing one of the keywords because if one
+                // of the functions was @inlined you would want all of the other functions coming after it to
+                // also be inlined
+                if lexer.setting_vars.vars.len() > 0 { lexer.setting_vars.vars.clear(); }
+            },
             TokenType::SingleSymbol | TokenType::DoubleSymbol => {
                 index = parse_symbols(&mut lexer, index, output);
             },

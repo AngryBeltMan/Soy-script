@@ -47,7 +47,6 @@ pub fn parse_keyword_jsfunc(output: &mut Output, lexer: &Lexer, inline_funcs: &m
         _ => compiler_panic(CompilerError::ExpectedSymbol, EXPECTED_PARENT)
     }
     let func_contents = lexer.tokens.get(lexer_index + 1).unwrap_or_error(CompilerError::ExpectedIdent, EXPECTED_BODY );
-    eprintln!("func con {}", func_contents.text);
     // the inner code inside the jsfunc
     // we don't increment the lexer index because the special quote "`" that stores the function's
     // body is not parsed/tokenized by the lexer
