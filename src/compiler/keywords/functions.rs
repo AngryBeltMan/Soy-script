@@ -12,7 +12,7 @@ pub fn parse_keyword_func(output: &mut Output, lexer: &Lexer, mut lexer_index: u
     lexer_index + 2
 }
 
-fn parse_args(lexer: &Lexer, lexer_index: &mut usize, output: &mut Output) {
+pub fn parse_args(lexer: &Lexer, lexer_index: &mut usize, output: &mut Output) {
     while *lexer_index < lexer.tokens.len()  {
         match lexer.tokens[*lexer_index].symbol_id {
             // if it is a comma or left parenthesis we do nothing and continue parsing

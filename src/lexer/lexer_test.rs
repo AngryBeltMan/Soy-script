@@ -11,8 +11,7 @@ fn init_var_test() {
     assert!(lexer.tokens[0] == keyword);
 }
 
-#[test]
-fn function_call_test() {
+#[test] fn function_call_test() {
     let function_call = "call hello(arg1,arg2,arg3)";
     let lexer = Lexer::parse_str(function_call);
     eprintln!("{:#?}", lexer);
@@ -40,3 +39,13 @@ fn comments_test() {
     let output = "\"and this is not\"";
     assert_eq!(&lexer.tokens[0].text , output)
 }
+
+// checks to see if special quote "`" parses itas a string and not as tokens
+#[test]
+fn special_quote_test() {
+    let input = "`hello = \"world\"` call hello()";
+    let lexer = Lexer::parse_str(input);
+    eprintln!("wow {:#?}", lexer.tokens);
+    assert_eq!(&lexer.tokens[0].text , "hello = \"world\"")
+}
+

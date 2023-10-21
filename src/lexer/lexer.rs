@@ -1,8 +1,11 @@
 use crate::lexer::tokens::*;
+
+#[derive(Debug, Clone)]
+pub struct SettingVars { pub vars: Vec<String> }
 #[derive(Debug, Clone)]
 pub struct Lexer {
     pub tokens: Vec<Token>,
-    pub index: usize
+    pub setting_vars: SettingVars
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +22,7 @@ pub enum TokenType {
     Ident,
     Keyword
 }
+
 impl Lexer {
     pub fn parse_str(file: &str) -> Self {
         let mut tokens = vec![];
@@ -29,9 +33,16 @@ impl Lexer {
         // as the user would want spaces
         let mut ignore_whitespace = true;
         let mut is_commented = false;
+        let mut is_special_quote = false;
         for character in file.chars() {
             // check whether or not to parse based on if it is a comment
             if character == '\n' { is_commented = false; }
+            if character == '`' {
+                prev_symbol = 0;
+                is_special_quote = !is_special_quote;
+                // if we encounter this character we won't even include it in the token stream
+                continue;
+            }
             // the single line comment character
             if character == '~' { is_commented = true; }
             if is_commented { continue; }
@@ -39,30 +50,35 @@ impl Lexer {
             let symbol = get_symbol_id(character);
 
             // stops parsing the ident string when it encounters a symbol, whitespace.
-            if (is_white_space(character) | (symbol != 0)) && ignore_whitespace {
+            if (is_white_space(character) | (symbol != 0)) && ignore_whitespace && !is_special_quote {
                 lexer_insert_ident_and_keyword(&mut ident_string, &mut tokens);
             } else { ident_string.push(character); }
 
             // swaps ignore white space value if there is double quote
             if character == '"' {
                 ignore_whitespace = !ignore_whitespace;
-                if !ignore_whitespace {
+                // checks if we have already inserted a double quote and if we have skip
+                if !ignore_whitespace && !is_special_quote {
                     ident_string.push('"');
                 }
                 continue;
             }
-
-            if symbol != 0 {
+            // if it is parsing a special quote we should not insert any tokens
+            // if the current token is nothing parse the previous token
+            if (symbol != 0) && !is_special_quote {
                 set_symbol_id(&mut prev_symbol, symbol,character, &mut tokens);
             } else {
+                // special quote will not insert a single symbol token because we set the previous
+                // symbol to zero which is not a token symbol id
                 check_push_symbol(&mut prev_symbol, &mut tokens);
             }
         }
         check_push_symbol(&mut prev_symbol, &mut tokens);
         lexer_insert_ident_and_keyword(&mut ident_string, &mut tokens);
-        Self { tokens, index: 0 }
+        Self { tokens, setting_vars: SettingVars { vars: vec![] } }
     }
 }
+// checks for double symbols
 #[inline]
 fn set_symbol_id(prev_symbol: &mut u8, symbol: u8, character: char ,tokens: &mut Vec<Token>) {
     if *prev_symbol == 0 {

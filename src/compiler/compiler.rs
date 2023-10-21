@@ -2,6 +2,7 @@ use crate::errors::error_msg::*;
 use crate::lexer::lexer::*;
 use crate::compiler::keywords::*;
 
+use super::keywords::jsfunc::InlinedFuncs;
 use super::symbols::parse_symbols;
 const ERRORINDEXINGLEXER: &str = "ERROR: index out of bounds when parsing file.";
 #[derive(Clone, Debug)]
@@ -21,19 +22,18 @@ impl Output {
         self.html_output.push_str("</html>");
     }
 }
-pub fn parse_lexer(output: &mut Output, lexer: Lexer) {
+pub fn parse_lexer(output: &mut Output, mut lexer: Lexer, inlined_funcs: &mut InlinedFuncs) {
     let mut index = 0;
     while index < lexer.tokens.len() {
         let token =  lexer.tokens.get(index)
             .unwrap_or_error(CompilerError::ExpectedToken, ERRORINDEXINGLEXER );
         match token.token_type {
-            TokenType::Keyword => match_keyword(&lexer, output, &mut index, token.symbol_id) ,
+            TokenType::Keyword => match_keyword(&lexer, output, inlined_funcs, &mut index, token.symbol_id),
             TokenType::SingleSymbol | TokenType::DoubleSymbol => {
-                parse_symbols(token, output);
-                index += 1;
+                index = parse_symbols(&mut lexer, index, output);
             },
-
-            _ => panic!("unknown token type {:#?}", token)
+            _ => panic!("ERROR: unknown token type {:#?}. (compiler.rs)", token)
         };
     }
 }
+

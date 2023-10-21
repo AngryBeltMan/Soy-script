@@ -7,7 +7,11 @@ pub enum LexerError {
 pub enum CompilerError {
     ExpectedIdent,
     ExpectedSymbol,
-    ExpectedToken
+    ExpectedUnsignedInteger,
+    ExpectedToken,
+    UnknownInlineFunc,
+    IncorrectAmountOfArgs,
+    UnclosedFunction,
 }
 pub trait UnwrapMsg {
     type ReturnItem;
@@ -37,4 +41,14 @@ impl <T>UnwrapMsg for Option<T> {
         }
     }
 
+}
+
+#[inline]
+pub fn compiler_assert(cmp: bool,error: CompilerError, msg: &str) {
+    assert!(cmp, "ERROR {error:?}:\n{msg}");
+}
+
+#[inline]
+pub fn compiler_panic(error: CompilerError, msg: &str) -> ! {
+    panic!("ERROR {error:?}:\n{msg}");
 }
